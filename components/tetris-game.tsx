@@ -280,6 +280,22 @@ export function TetrisGameComponent() {
     };
   }, [gameState, moveLeft, moveRight, softDrop, hardDrop, rotateLeft, rotateRight, hold, keyBindings]);
 
+  const drawGrid = (ctx: CanvasRenderingContext2D) => {
+    grid.forEach((row, y) => {
+      row.forEach((cell, x) => {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.strokeRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        if (cell) {
+          ctx.fillStyle = cell;
+          ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+          ctx.strokeRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        }
+      });
+    });
+  };
+
+  // drawGridを使用する前に宣言を移動
   useEffect(() => {
     const canvas = canvasRef.current;
     const nextPiecesCanvas = nextPiecesCanvasRef.current;
@@ -291,7 +307,7 @@ export function TetrisGameComponent() {
     const heldPieceCtx = heldPieceCanvas.getContext('2d');
     if (!ctx || !nextPiecesCtx || !heldPieceCtx) return;
 
-    function redrawCanvas() {
+    const redrawCanvas = () => {
       if (!canvas || !ctx || !nextPiecesCanvas || !nextPiecesCtx || !heldPieceCanvas || !heldPieceCtx) return;
 
       // キャンバスをクリア
@@ -326,22 +342,7 @@ export function TetrisGameComponent() {
     }
 
     redrawCanvas();
-  }, [grid, currentPiece, currentPosition, nextPieces, heldPiece]);
-
-  const drawGrid = (ctx: CanvasRenderingContext2D) => {
-    grid.forEach((row, y) => {
-      row.forEach((cell, x) => {
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.strokeRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-        if (cell) {
-          ctx.fillStyle = cell;
-          ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-          ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-          ctx.strokeRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-        }
-      });
-    });
-  };
+  }, [grid, currentPiece, currentPosition, nextPieces, heldPiece, drawGrid]);
 
   const drawPiece = (ctx: CanvasRenderingContext2D, piece: Piece, position: { x: number, y: number }) => {
     ctx.fillStyle = piece.color;

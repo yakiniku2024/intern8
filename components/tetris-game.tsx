@@ -369,7 +369,7 @@ export function TetrisGameComponent() {
   const renderGameScreen = () => (
     <div className="flex items-start justify-center">
       <div className="mr-8">
-        <h2 className="text-xl font-bold mb-2">ホールド</h2>
+        <h2 className="text-xl font-bold mb-2">Hold</h2>
         <canvas
           ref={heldPieceCanvasRef}
           width={4 * CELL_SIZE}
@@ -384,20 +384,21 @@ export function TetrisGameComponent() {
           height={ROWS * CELL_SIZE}
           className="border-2 border-gray-400"
         />
+        {/* スコアとレベルの表示位置をゲームフィールドの真下に移動 */}
+        <div className="text-center mt-4">
+          <h2 className="text-xl font-bold">score: {score}</h2> 
+          <h2 className="text-xl font-bold">lebel: {level}</h2>
+        </div>
       </div>
       <div className="ml-8">
         <div className="mb-4">
-          <h2 className="text-xl font-bold mb-2">次のピース</h2>
+          <h2 className="text-xl font-bold mb-2">Next</h2>
           <canvas
             ref={nextPiecesCanvasRef}
             width={4 * CELL_SIZE}
             height={nextPiecesCount * 4 * CELL_SIZE}
             className="border-2 border-gray-400"
           />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold">スコア: {score}</h2>
-          <h2 className="text-xl font-bold">レベル: {level}</h2>
         </div>
       </div>
     </div>

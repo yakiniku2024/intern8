@@ -52,7 +52,7 @@ export function TetrisGameComponent() {
     hardDrop: 'ArrowUp',
     rotateLeft: 'a',
     rotateRight: 'f',
-    hold: ' '
+    hold: ' ' // 初期設定でスペースを追加
   });
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -262,7 +262,7 @@ export function TetrisGameComponent() {
           rotateRight();
           break;
         case keyBindings.hold:
-          hold();
+          hold(); // スペースキーでホールドを呼び出す
           break;
       }
     };
@@ -405,13 +405,15 @@ export function TetrisGameComponent() {
   );
 
   const renderGameOverScreen = () => (
-    <div className="flex flex-col items-center justify-center h-full">
-      <h1 className="text-4xl font-bold mb-8">
+    <div className="flex flex-col items-center justify-center h-screen"> {/* h-fullからh-screenに変更 */}
+      <h1 className="text-4xl font-bold mb-8 text-center"> {/* テキストを中央揃え */}
         Game Over
       </h1>
-      <h2 className="text-2xl mb-4">Score: {score}</h2>
-      <Button onClick={() => { initializeGame(); setGameState('playing'); }}>Retry</Button>
-      <Button onClick={() => setGameState('title')} className="mt-4">Back to Title</Button>
+      <h2 className="text-2xl mb-4 text-center">Score: {score}</h2> {/* テキストを中央揃え */}
+      <div className="flex flex-col items-center"> {/* ボタンを中央揃え */}
+        <Button onClick={() => { initializeGame(); setGameState('playing'); }} className="mb-2">Retry</Button>
+        <Button onClick={() => { setGameState('title'); initializeGame(); }} className="mt-4">Back to Title</Button>
+      </div>
     </div>
   );
 
@@ -428,7 +430,7 @@ export function TetrisGameComponent() {
             <SelectValue placeholder="Select next pieces count" />
           </SelectTrigger>
           <SelectContent>
-            {[1, 2, 3, 4, 5].map((count) => (
+            {[1, 2, 3, 4, 5].map((count) => ( // 1から5までの数に戻す
               <SelectItem key={count} value={count.toString()}>
                 {count}
               </SelectItem>
@@ -442,14 +444,23 @@ export function TetrisGameComponent() {
           <Input
             id={action}
             type="text"
-            value={key}
-            onChange={(e) => setKeyBindings(prev => ({ ...prev, [action]: e.target.value }))}
+            value={key === ' ' ? 'Space' : key} // スペースキーを押したときに"Space"と表示
+            onChange={(e) => setKeyBindings(prev => ({ ...prev, [action]: e.target.value }))} 
+            onKeyDown={(e) => {
+              e.preventDefault(); // デフォルトのキー入力を防ぐ
+              setKeyBindings(prev => ({ ...prev, [action]: e.key === ' ' ? 'Space' : e.key })); // スペースキーを"Space"に設定
+            }}
           />
         </div>
       ))}
       <Button onClick={() => setGameState('title')} className="mt-4">Back to Title</Button>
     </div>
   );
+
+  // ゲームオーバーの条件をチェックする部分で、ゲームオーバー画面を表示
+  if (gameOver) {
+    return renderGameOverScreen(); // ゲームオーバー画面を表示
+  }
 
   return (
     <div className="h-screen flex items-center justify-center bg-gray-100">

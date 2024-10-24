@@ -210,8 +210,6 @@ export function TetrisGameComponent() {
     placePiece({ ...currentPosition, y: newY });
   }, [currentPiece, currentPosition, checkCollision, placePiece]);
 
-  const easeOutQuad = (t: number) => t * (2 - t);
-
   const hold = useCallback(() => {
     if (!currentPiece) return;
 

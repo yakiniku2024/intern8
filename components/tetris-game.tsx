@@ -381,12 +381,12 @@ export function TetrisGameComponent() {
   }, [grid, currentPiece, currentPosition, nextPieces, heldPiece, drawGrid]);
 
   const drawPiece = (ctx: CanvasRenderingContext2D, piece: Piece, position: { x: number, y: number }, isGhost: boolean = false) => {
-    ctx.fillStyle = isGhost ? 'rgba(0, 0, 0, 0)' : piece.color; // ゴーストの色を透明に定
+    ctx.fillStyle = isGhost ? 'rgba(0, 0, 0, 0.5)' : piece.color; // ゴーストの色を設定
     piece.shape.forEach((row, y) => {
       row.forEach((cell, x) => {
         if (cell) {
           ctx.fillRect((position.x + x) * CELL_SIZE, (position.y + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-          ctx.strokeStyle = isGhost ? piece.color : 'rgba(0, 0, 0, 0.3)'; // ゴーストの枠線をミノの色に設定
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
           ctx.strokeRect((position.x + x) * CELL_SIZE, (position.y + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
         }
       });
@@ -501,6 +501,21 @@ export function TetrisGameComponent() {
       <Button onClick={handleBackToTitle} className="mt-4">Back to Title</Button> {/* タイトルに戻る処理を修正 */}
     </div>
   );
+
+  const renderGhostPiece = (piece: Piece) => {
+    return (
+      <div
+        className="absolute"
+        style={{
+          backgroundColor: 'grey', // 背景色を灰色に設定
+          border: '1px solid rgba(0, 0, 0, 0.5)', // 枠線の色はそのまま
+          // ... 他のスタイル ...
+        }}
+      >
+        {/* ゴーストピースの描画ロジック */}
+      </div>
+    );
+  };
 
   // ゲームオーバーの条件をチェックする部分で、ゲームオーバー画面を表示
   if (gameOver) {

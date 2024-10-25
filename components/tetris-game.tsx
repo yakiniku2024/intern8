@@ -338,19 +338,25 @@ export function TetrisGameComponent() {
       // 現在のピースを描画
       if (currentPiece) {
         drawPiece(ctx, currentPiece, currentPosition);
+        // ゴーストピースを描画
+        let ghostY = currentPosition.y;
+        while (!checkCollision(currentPiece, { x: currentPosition.x, y: ghostY + 1 })) {
+          ghostY++;
+        }
+        drawPiece(ctx, currentPiece, { x: currentPosition.x, y: ghostY }, true); // ゴーストを表示
       }
     }
 
     redrawCanvas();
   }, [grid, currentPiece, currentPosition, nextPieces, heldPiece, drawGrid]);
 
-  const drawPiece = (ctx: CanvasRenderingContext2D, piece: Piece, position: { x: number, y: number }) => {
-    ctx.fillStyle = piece.color;
+  const drawPiece = (ctx: CanvasRenderingContext2D, piece: Piece, position: { x: number, y: number }, isGhost: boolean = false) => {
+    ctx.fillStyle = isGhost ? 'rgba(0, 0, 0, 0)' : piece.color; // ゴーストの色を透明に設定
     piece.shape.forEach((row, y) => {
       row.forEach((cell, x) => {
         if (cell) {
           ctx.fillRect((position.x + x) * CELL_SIZE, (position.y + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-          ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+          ctx.strokeStyle = isGhost ? piece.color : 'rgba(0, 0, 0, 0.3)'; // ゴーストの枠線をミノの色に設定
           ctx.strokeRect((position.x + x) * CELL_SIZE, (position.y + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
         }
       });

@@ -34,6 +34,15 @@ function shuffleArray<T>(array: T[]): T[] {
   return array;
 }
 
+// 色RGBに変換する関数
+const hexToRgb = (hex: string) => {
+    const bigint = parseInt(hex.replace('#', ''), 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return [r, g, b];
+};
+
 export function TetrisGameComponent() {
   const [gameState, setGameState] = useState('title'); // 'title', 'playing', 'gameover', 'settings'
   const [grid, setGrid] = useState<Grid>(() => Array(ROWS).fill(null).map(() => Array(COLS).fill(null)));
@@ -256,7 +265,7 @@ export function TetrisGameComponent() {
     });
   }, []);
 
-  // リトライボタンの処理を修正
+  // リトライボタンの��理を修正
   const handleRetry = () => {
     initializeGame();
     setIsPaused(false); // リトライ時にポーズを解除
@@ -399,15 +408,21 @@ export function TetrisGameComponent() {
   }, [grid, currentPiece, currentPosition, nextPieces, heldPiece, drawGrid]);
 
   const drawPiece = (ctx: CanvasRenderingContext2D, piece: Piece, position: { x: number, y: number }, isGhost: boolean = false) => {
-    ctx.fillStyle = isGhost ? 'rgba(0, 0, 0, 0.5)' : piece.color; // ゴーストの色を設定
+    // ゴーストピースの色を lightgray に設定
+    if (isGhost) {
+        ctx.fillStyle = 'lightgray'; // ゴーストピースの色を指定
+    } else {
+        ctx.fillStyle = piece.color; // 通常の色
+    }
+
     piece.shape.forEach((row, y) => {
-      row.forEach((cell, x) => {
-        if (cell) {
-          ctx.fillRect((position.x + x) * CELL_SIZE, (position.y + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-          ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-          ctx.strokeRect((position.x + x) * CELL_SIZE, (position.y + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-        }
-      });
+        row.forEach((cell, x) => {
+            if (cell) {
+                ctx.fillRect((position.x + x) * CELL_SIZE, (position.y + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.strokeRect((position.x + x) * CELL_SIZE, (position.y + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+            }
+        });
     });
   };
 
@@ -522,7 +537,7 @@ export function TetrisGameComponent() {
 
   // ゲームオーバーの条件をチェックする部分で、ゲームオーバー画面を表示
   if (gameOver) {
-    return renderGameOverScreen(); // ゲームオーバー画面を表示
+    return renderGameOverScreen(); // ゲムオーバー画面を表示
   }
 
   return (

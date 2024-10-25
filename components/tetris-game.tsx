@@ -502,21 +502,6 @@ export function TetrisGameComponent() {
     </div>
   );
 
-  const renderGhostPiece = (piece: Piece) => {
-    return (
-      <div
-        className="absolute"
-        style={{
-          backgroundColor: 'grey', // 背景色を灰色に設定
-          border: '1px solid rgba(0, 0, 0, 0.5)', // 枠線の色はそのまま
-          // ... 他のスタイル ...
-        }}
-      >
-        {/* ゴーストピースの描画ロジック */}
-      </div>
-    );
-  };
-
   // ゲームオーバーの条件をチェックする部分で、ゲームオーバー画面を表示
   if (gameOver) {
     return renderGameOverScreen(); // ゲームオーバー画面を表示

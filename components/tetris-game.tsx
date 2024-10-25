@@ -82,7 +82,7 @@ export function TetrisGameComponent() {
     setPieceSet(initialPieceSet.slice(1));
     setCurrentPiece(initialPieceSet[0]);
     setCurrentPosition({ x: Math.floor(COLS / 2) - 1, y: 0 });
-    setNextPieces(Array(nextPiecesCount).fill(null).map(() => getNextPiece()));
+    setNextPieces(Array.from({ length: nextPiecesCount }, () => getNextPiece())); // ここを修正
     setHeldPiece(null);
     setScore(0);
     setLevel(1);

@@ -104,6 +104,26 @@ export function TetrisGameComponent() {
     return false;
   }, [grid]);
 
+  // レベルアップに必要なスコアを計算する関数
+  const getScoreForNextLevel = (currentLevel: number) => {
+    if (currentLevel === 1) {
+      return 5000; // レベル1からレベル2へのスコア
+    }
+    return Math.floor(5000 * Math.pow(1.2, currentLevel - 2)); // 以降は1.2倍
+  };
+
+  // スコアが更新される部分
+  const updateScore = (linesCleared: number) => {
+    const newScore = score + [100, 300, 500, 4000][linesCleared - 1];
+    setScore(newScore);
+
+    // レベルの更新
+    const nextLevelScore = getScoreForNextLevel(level);
+    if (newScore >= nextLevelScore) {
+      setLevel(prevLevel => prevLevel + 1); // レベルアップ
+    }
+  };
+
   const placePiece = useCallback((position = currentPosition) => {
     if (!currentPiece) return;
 
@@ -138,15 +158,13 @@ export function TetrisGameComponent() {
     }, [] as number[]);
 
     if (completedLines.length > 0) {
-      const newScore = score + [100, 300, 500, 4000][completedLines.length - 1];
-      setScore(newScore);
-      setLevel(Math.floor(newScore / 1000) + 1);
+      updateScore(completedLines.length); // スコアを更新
 
       const updatedGrid = newGrid.filter((_, index) => !completedLines.includes(index));
       const newLines = Array(completedLines.length).fill(null).map(() => Array(COLS).fill(null));
       setGrid([...newLines, ...updatedGrid]);
     }
-  }, [currentPiece, grid, nextPieces, checkCollision, getNextPiece, score, currentPosition]);
+  }, [currentPiece, grid, nextPieces, checkCollision, getNextPiece, score, currentPosition, updateScore]);
 
   const moveLeft = useCallback(() => {
     if (currentPiece && !checkCollision(currentPiece, { x: currentPosition.x - 1, y: currentPosition.y })) {
@@ -224,16 +242,46 @@ export function TetrisGameComponent() {
     setCurrentPosition({ x: Math.floor(COLS / 2) - 1, y: 0 });
   }, [currentPiece, heldPiece, nextPieces, getNextPiece]);
 
-  useEffect(() => {
-    if (gameOver) return;
+  const [isPaused, setIsPaused] = useState(false); // ゲームの一時停止状態を管理
+  const [showPauseMenu, setShowPauseMenu] = useState(false); // ポーズメニューの表示状態を管理
 
-    const baseSpeed = 1000; // 1 second
+  const togglePause = useCallback(() => {
+    setIsPaused(prev => {
+      if (!prev) {
+        setShowPauseMenu(true); // ポーズ中にメニューを表示
+      } else {
+        setShowPauseMenu(false); // ポーズ解除時にメニューを非表示
+      }
+      return !prev; // 一時停止状態をトグル
+    });
+  }, []);
+
+  // リトライボタンの理を修正
+  const handleRetry = () => {
+    initializeGame();
+    setIsPaused(false); // リトライ時にポーズを解除
+    setShowPauseMenu(false); // ポーズメニューを非表示
+    setGameState('playing'); // ゲーム状態を「playing」に設定
+  };
+
+  // タイトルに戻る処理を修正
+  const handleBackToTitle = () => {
+    setIsPaused(false); // タイトルに戻る際にポーズを解除
+    setShowPauseMenu(false); // ポーズメニューを非表示
+    setGameState('title'); // ゲーム状態を「title」に設定
+  };
+
+  // ゲームループの中でポーズ状態をチェック
+  useEffect(() => {
+    if (gameOver || isPaused) return; // ゲームオーバーまたはポーズ中は何もしない
+
+    const baseSpeed = 1000; // 1秒
     const gameLoop = setInterval(() => {
       softDrop();
-    }, baseSpeed * Math.pow(0.8, Math.min(level - 1, 13))); // Speed increase stops at level 14
+    }, baseSpeed * Math.pow(0.6, Math.min(level - 1, 13))); // スピード増加はレベル14で停止
 
     return () => clearInterval(gameLoop);
-  }, [softDrop, level, gameOver]);
+  }, [softDrop, level, gameOver, isPaused, checkCollision]); // checkCollisionを依存配列に追加
 
   useEffect(() => {
     let hardDropCleanup: (() => void) | null = null;
@@ -351,15 +399,21 @@ export function TetrisGameComponent() {
   }, [grid, currentPiece, currentPosition, nextPieces, heldPiece, drawGrid]);
 
   const drawPiece = (ctx: CanvasRenderingContext2D, piece: Piece, position: { x: number, y: number }, isGhost: boolean = false) => {
-    ctx.fillStyle = isGhost ? 'rgba(0, 0, 0, 0)' : piece.color; // ゴーストの色を透明に設定
+    // ゴーストピースの色を透明に設定
+    if (isGhost) {
+        ctx.fillStyle = 'rgba(211, 211, 211, 0.5)'; // lightgray の透明色
+    } else {
+        ctx.fillStyle = piece.color; // 通常の色
+    }
+
     piece.shape.forEach((row, y) => {
-      row.forEach((cell, x) => {
-        if (cell) {
-          ctx.fillRect((position.x + x) * CELL_SIZE, (position.y + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-          ctx.strokeStyle = isGhost ? piece.color : 'rgba(0, 0, 0, 0.3)'; // ゴーストの枠線をミノの色に設定
-          ctx.strokeRect((position.x + x) * CELL_SIZE, (position.y + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-        }
-      });
+        row.forEach((cell, x) => {
+            if (cell) {
+                ctx.fillRect((position.x + x) * CELL_SIZE, (position.y + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.strokeRect((position.x + x) * CELL_SIZE, (position.y + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+            }
+        });
     });
   };
 
@@ -392,7 +446,8 @@ export function TetrisGameComponent() {
         {/* スコアとレベルの表示位置をゲームフィールドの真下に移動 */}
         <div className="text-center mt-4">
           <h2 className="text-xl font-bold">score: {score}</h2> 
-          <h2 className="text-xl font-bold">lebel: {level}</h2>
+          <h2 className="text-xl font-bold">level: {level}</h2>
+          <Button onClick={togglePause} className="mt-4">{isPaused ? 'Resume' : 'Pause'}</Button> {/* ポーズボタンを追加 */}
         </div>
       </div>
       <div className="ml-8">
@@ -462,17 +517,30 @@ export function TetrisGameComponent() {
     </div>
   );
 
+  const renderPauseMenu = () => (
+    <div className="flex flex-col items-center justify-center h-full">
+      <h1 className="text-2xl font-bold mb-4">Paused</h1>
+      <Button onClick={() => { setIsPaused(false); setShowPauseMenu(false); }} className="mb-2">Resume</Button>
+      <Button onClick={handleRetry} className="mb-2">Retry</Button>
+      <Button onClick={handleBackToTitle} className="mt-4">Back to Title</Button> {/* タイトルに戻る処理を修正 */}
+    </div>
+  );
+
   // ゲームオーバーの条件をチェックする部分で、ゲームオーバー画面を表示
   if (gameOver) {
-    return renderGameOverScreen(); // ゲームオーバー画面を表示
+    return renderGameOverScreen(); // ゲムオーバー画面を表示
   }
 
   return (
     <div className="h-screen flex items-center justify-center bg-gray-100">
-      {gameState === 'title' && renderTitleScreen()}
-      {gameState === 'playing' && renderGameScreen()}
-      {gameState === 'gameover' && renderGameOverScreen()}
-      {gameState === 'settings' && renderSettingsScreen()}
+      {showPauseMenu ? renderPauseMenu() : (
+        <div className="h-screen flex items-center justify-center bg-gray-100">
+          {gameState === 'title' && renderTitleScreen()}
+          {gameState === 'playing' && renderGameScreen()}
+          {gameState === 'gameover' && renderGameOverScreen()}
+          {gameState === 'settings' && renderSettingsScreen()}
+        </div>
+      )}
     </div>
   );
 }

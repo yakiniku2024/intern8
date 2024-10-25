@@ -68,8 +68,9 @@ export function TetrisGameComponent() {
 
   const getNextPiece = useCallback(() => {
     if (pieceSet.length === 0) {
-      setPieceSet(createNewPieceSet());
-      return createNewPieceSet()[0];
+        const newPieceSet = createNewPieceSet();
+        setPieceSet(newPieceSet);
+        return newPieceSet[0]; // 新しいピースセットから最初のピースを取得
     }
     const nextPiece = pieceSet[0];
     setPieceSet(prev => prev.slice(1));
@@ -79,7 +80,7 @@ export function TetrisGameComponent() {
   const initializeGame = useCallback(() => {
     setGrid(Array(ROWS).fill(null).map(() => Array(COLS).fill(null)));
     const initialPieceSet = createNewPieceSet();
-    setPieceSet(initialPieceSet.slice(1));
+    setPieceSet(initialPieceSet.slice(1)); // ここを修正
     setCurrentPiece(initialPieceSet[0]);
     setCurrentPosition({ x: Math.floor(COLS / 2) - 1, y: 0 });
     setNextPieces(Array.from({ length: nextPiecesCount }, () => getNextPiece())); // ここを修正
@@ -259,7 +260,7 @@ export function TetrisGameComponent() {
 
   // リトライボタンの理を修正
   const handleRetry = () => {
-    initializeGame();
+    initializeGame(); // ゲームを初期化
     setIsPaused(false); // リトライ時にポーズを解除
     setShowPauseMenu(false); // ポーズメニューを非表示
     setGameState('playing'); // ゲーム状態を「playing」に設定
@@ -421,7 +422,7 @@ export function TetrisGameComponent() {
   const renderTitleScreen = () => (
     <div className="flex flex-col items-center justify-center h-full">
       <h1 className="text-4xl font-bold mb-8">Tetris Game</h1>
-      <Button onClick={() => { initializeGame(); setGameState('playing'); }}>Start Game</Button>
+      <Button onClick={() => { initializeGame(); setGameState('playing'); }}>Start Game</Button> {/* スタートゲーム時に初期化 */}
       <Button onClick={() => setGameState('settings')} className="mt-4">Settings</Button>
     </div>
   );

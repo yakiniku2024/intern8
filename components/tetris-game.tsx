@@ -399,9 +399,9 @@ export function TetrisGameComponent() {
   }, [grid, currentPiece, currentPosition, nextPieces, heldPiece, drawGrid]);
 
   const drawPiece = (ctx: CanvasRenderingContext2D, piece: Piece, position: { x: number, y: number }, isGhost: boolean = false) => {
-    // ゴーストピースの色を lightgray に設定
+    // ゴーストピースの色を透明に設定
     if (isGhost) {
-        ctx.fillStyle = 'lightgray'; // ゴーストピースの色を指定
+        ctx.fillStyle = 'rgba(211, 211, 211, 0.5)'; // lightgray の透明色
     } else {
         ctx.fillStyle = piece.color; // 通常の色
     }

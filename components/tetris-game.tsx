@@ -87,6 +87,7 @@ export function TetrisGameComponent() {
     setScore(0);
     setLevel(1);
     setGameOver(false);
+    setPieceSet([]); // 追加: ピースセットをリセット
   }, [getNextPiece, nextPiecesCount, createNewPieceSet]);
 
   const checkCollision = useCallback((piece: Piece, position: { x: number, y: number }) => {

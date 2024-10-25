@@ -52,7 +52,7 @@ export function TetrisGameComponent() {
     hardDrop: 'ArrowUp',
     rotateLeft: 'a',
     rotateRight: 'f',
-    hold: ' '
+    hold: ' ' // 初期設定でスペースを追加
   });
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -210,8 +210,6 @@ export function TetrisGameComponent() {
     placePiece({ ...currentPosition, y: newY });
   }, [currentPiece, currentPosition, checkCollision, placePiece]);
 
-  const easeOutQuad = (t: number) => t * (2 - t);
-
   const hold = useCallback(() => {
     if (!currentPiece) return;
 
@@ -262,7 +260,7 @@ export function TetrisGameComponent() {
           rotateRight();
           break;
         case keyBindings.hold:
-          hold();
+          hold(); // スペースキーでホールドを呼び出す
           break;
       }
     };
@@ -282,6 +280,22 @@ export function TetrisGameComponent() {
     };
   }, [gameState, moveLeft, moveRight, softDrop, hardDrop, rotateLeft, rotateRight, hold, keyBindings]);
 
+  const drawGrid = (ctx: CanvasRenderingContext2D) => {
+    grid.forEach((row, y) => {
+      row.forEach((cell, x) => {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.strokeRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        if (cell) {
+          ctx.fillStyle = cell;
+          ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+          ctx.strokeRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        }
+      });
+    });
+  };
+
+  // drawGridを使用する前に宣言を移動
   useEffect(() => {
     const canvas = canvasRef.current;
     const nextPiecesCanvas = nextPiecesCanvasRef.current;
@@ -293,7 +307,7 @@ export function TetrisGameComponent() {
     const heldPieceCtx = heldPieceCanvas.getContext('2d');
     if (!ctx || !nextPiecesCtx || !heldPieceCtx) return;
 
-    function redrawCanvas() {
+    const redrawCanvas = () => {
       if (!canvas || !ctx || !nextPiecesCanvas || !nextPiecesCtx || !heldPieceCanvas || !heldPieceCtx) return;
 
       // キャンバスをクリア
@@ -324,34 +338,25 @@ export function TetrisGameComponent() {
       // 現在のピースを描画
       if (currentPiece) {
         drawPiece(ctx, currentPiece, currentPosition);
+        // ゴーストピースを描画
+        let ghostY = currentPosition.y;
+        while (!checkCollision(currentPiece, { x: currentPosition.x, y: ghostY + 1 })) {
+          ghostY++;
+        }
+        drawPiece(ctx, currentPiece, { x: currentPosition.x, y: ghostY }, true); // ゴーストを表示
       }
     }
 
     redrawCanvas();
-  }, [grid, currentPiece, currentPosition, nextPieces, heldPiece]);
+  }, [grid, currentPiece, currentPosition, nextPieces, heldPiece, drawGrid]);
 
-  const drawGrid = (ctx: CanvasRenderingContext2D) => {
-    grid.forEach((row, y) => {
-      row.forEach((cell, x) => {
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.strokeRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-        if (cell) {
-          ctx.fillStyle = cell;
-          ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-          ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-          ctx.strokeRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-        }
-      });
-    });
-  };
-
-  const drawPiece = (ctx: CanvasRenderingContext2D, piece: Piece, position: { x: number, y: number }) => {
-    ctx.fillStyle = piece.color;
+  const drawPiece = (ctx: CanvasRenderingContext2D, piece: Piece, position: { x: number, y: number }, isGhost: boolean = false) => {
+    ctx.fillStyle = isGhost ? 'rgba(0, 0, 0, 0)' : piece.color; // ゴーストの色を透明に設定
     piece.shape.forEach((row, y) => {
       row.forEach((cell, x) => {
         if (cell) {
           ctx.fillRect((position.x + x) * CELL_SIZE, (position.y + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-          ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+          ctx.strokeStyle = isGhost ? piece.color : 'rgba(0, 0, 0, 0.3)'; // ゴーストの枠線をミノの色に設定
           ctx.strokeRect((position.x + x) * CELL_SIZE, (position.y + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
         }
       });
@@ -369,7 +374,7 @@ export function TetrisGameComponent() {
   const renderGameScreen = () => (
     <div className="flex items-start justify-center">
       <div className="mr-8">
-        <h2 className="text-xl font-bold mb-2">ホールド</h2>
+        <h2 className="text-xl font-bold mb-2">Hold</h2>
         <canvas
           ref={heldPieceCanvasRef}
           width={4 * CELL_SIZE}
@@ -384,10 +389,15 @@ export function TetrisGameComponent() {
           height={ROWS * CELL_SIZE}
           className="border-2 border-gray-400"
         />
+        {/* スコアとレベルの表示位置をゲームフィールドの真下に移動 */}
+        <div className="text-center mt-4">
+          <h2 className="text-xl font-bold">score: {score}</h2> 
+          <h2 className="text-xl font-bold">lebel: {level}</h2>
+        </div>
       </div>
       <div className="ml-8">
         <div className="mb-4">
-          <h2 className="text-xl font-bold mb-2">次のピース</h2>
+          <h2 className="text-xl font-bold mb-2">Next</h2>
           <canvas
             ref={nextPiecesCanvasRef}
             width={4 * CELL_SIZE}
@@ -395,22 +405,20 @@ export function TetrisGameComponent() {
             className="border-2 border-gray-400"
           />
         </div>
-        <div>
-          <h2 className="text-xl font-bold">スコア: {score}</h2>
-          <h2 className="text-xl font-bold">レベル: {level}</h2>
-        </div>
       </div>
     </div>
   );
 
   const renderGameOverScreen = () => (
-    <div className="flex flex-col items-center justify-center h-full">
-      <h1 className="text-4xl font-bold mb-8">
+    <div className="flex flex-col items-center justify-center h-screen"> {/* h-fullからh-screenに変更 */}
+      <h1 className="text-4xl font-bold mb-8 text-center"> {/* テキストを中央揃え */}
         Game Over
       </h1>
-      <h2 className="text-2xl mb-4">Score: {score}</h2>
-      <Button onClick={() => { initializeGame(); setGameState('playing'); }}>Retry</Button>
-      <Button onClick={() => setGameState('title')} className="mt-4">Back to Title</Button>
+      <h2 className="text-2xl mb-4 text-center">Score: {score}</h2> {/* テキストを中央揃え */}
+      <div className="flex flex-col items-center"> {/* ボタンを中央揃え */}
+        <Button onClick={() => { initializeGame(); setGameState('playing'); }} className="mb-2">Retry</Button>
+        <Button onClick={() => { setGameState('title'); initializeGame(); }} className="mt-4">Back to Title</Button>
+      </div>
     </div>
   );
 
@@ -427,7 +435,7 @@ export function TetrisGameComponent() {
             <SelectValue placeholder="Select next pieces count" />
           </SelectTrigger>
           <SelectContent>
-            {[1, 2, 3, 4, 5].map((count) => (
+            {[1, 2, 3, 4, 5].map((count) => ( // 1から5までの数に戻す
               <SelectItem key={count} value={count.toString()}>
                 {count}
               </SelectItem>
@@ -441,14 +449,23 @@ export function TetrisGameComponent() {
           <Input
             id={action}
             type="text"
-            value={key}
-            onChange={(e) => setKeyBindings(prev => ({ ...prev, [action]: e.target.value }))}
+            value={key === ' ' ? 'Space' : key} // スペースキーを押したときに"Space"と表示
+            onChange={(e) => setKeyBindings(prev => ({ ...prev, [action]: e.target.value }))} 
+            onKeyDown={(e) => {
+              e.preventDefault(); // デフォルトのキー入力を防ぐ
+              setKeyBindings(prev => ({ ...prev, [action]: e.key === ' ' ? 'Space' : e.key })); // スペースキーを"Space"に設定
+            }}
           />
         </div>
       ))}
       <Button onClick={() => setGameState('title')} className="mt-4">Back to Title</Button>
     </div>
   );
+
+  // ゲームオーバーの条件をチェックする部分で、ゲームオーバー画面を表示
+  if (gameOver) {
+    return renderGameOverScreen(); // ゲームオーバー画面を表示
+  }
 
   return (
     <div className="h-screen flex items-center justify-center bg-gray-100">

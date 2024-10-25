@@ -34,15 +34,6 @@ function shuffleArray<T>(array: T[]): T[] {
   return array;
 }
 
-// 色RGBに変換する関数
-const hexToRgb = (hex: string) => {
-    const bigint = parseInt(hex.replace('#', ''), 16);
-    const r = (bigint >> 16) & 255;
-    const g = (bigint >> 8) & 255;
-    const b = bigint & 255;
-    return [r, g, b];
-};
-
 export function TetrisGameComponent() {
   const [gameState, setGameState] = useState('title'); // 'title', 'playing', 'gameover', 'settings'
   const [grid, setGrid] = useState<Grid>(() => Array(ROWS).fill(null).map(() => Array(COLS).fill(null)));
@@ -265,7 +256,7 @@ export function TetrisGameComponent() {
     });
   }, []);
 
-  // リトライボタンの��理を修正
+  // リトライボタンの理を修正
   const handleRetry = () => {
     initializeGame();
     setIsPaused(false); // リトライ時にポーズを解除

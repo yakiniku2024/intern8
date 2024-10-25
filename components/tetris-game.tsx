@@ -246,14 +246,6 @@ export function TetrisGameComponent() {
     setGameState('playing'); // ゲーム状態を「playing」に設定
   };
 
-  // ゲームを開始する際にポーズ状態をリセット
-  const startGame = () => {
-    initializeGame();
-    setIsPaused(false); // ゲーム開始時にポーズを解除
-    setShowPauseMenu(false); // ポーズメニューを非表示
-    setGameState('playing'); // ゲーム状態を「playing」に設定
-  };
-
   // タイトルに戻る処理を修正
   const handleBackToTitle = () => {
     setIsPaused(false); // タイトルに戻る際にポーズを解除
@@ -271,7 +263,7 @@ export function TetrisGameComponent() {
     }, baseSpeed * Math.pow(0.8, Math.min(level - 1, 13))); // スピード増加はレベル14で停止
 
     return () => clearInterval(gameLoop);
-  }, [softDrop, level, gameOver, isPaused]); // isPausedを依存配列に追加
+  }, [softDrop, level, gameOver, isPaused, checkCollision]); // checkCollisionを依存配列に追加
 
   useEffect(() => {
     let hardDropCleanup: (() => void) | null = null;

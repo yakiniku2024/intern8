@@ -104,6 +104,26 @@ export function TetrisGameComponent() {
     return false;
   }, [grid]);
 
+  // レベルアップに必要なスコアを計算する関数
+  const getScoreForNextLevel = (currentLevel: number) => {
+    if (currentLevel === 1) {
+      return 5000; // レベル1からレベル2へのスコア
+    }
+    return Math.floor(5000 * Math.pow(1.2, currentLevel - 2)); // 以降は1.2倍
+  };
+
+  // スコアが更新される部分
+  const updateScore = (linesCleared: number) => {
+    const newScore = score + [100, 300, 500, 4000][linesCleared - 1];
+    setScore(newScore);
+
+    // レベルの更新
+    const nextLevelScore = getScoreForNextLevel(level);
+    if (newScore >= nextLevelScore) {
+      setLevel(prevLevel => prevLevel + 1); // レベルアップ
+    }
+  };
+
   const placePiece = useCallback((position = currentPosition) => {
     if (!currentPiece) return;
 
@@ -138,15 +158,13 @@ export function TetrisGameComponent() {
     }, [] as number[]);
 
     if (completedLines.length > 0) {
-      const newScore = score + [100, 300, 500, 4000][completedLines.length - 1];
-      setScore(newScore);
-      setLevel(Math.floor(newScore / 1000) + 1);
+      updateScore(completedLines.length); // スコアを更新
 
       const updatedGrid = newGrid.filter((_, index) => !completedLines.includes(index));
       const newLines = Array(completedLines.length).fill(null).map(() => Array(COLS).fill(null));
       setGrid([...newLines, ...updatedGrid]);
     }
-  }, [currentPiece, grid, nextPieces, checkCollision, getNextPiece, score, currentPosition]);
+  }, [currentPiece, grid, nextPieces, checkCollision, getNextPiece, score, currentPosition, updateScore]);
 
   const moveLeft = useCallback(() => {
     if (currentPiece && !checkCollision(currentPiece, { x: currentPosition.x - 1, y: currentPosition.y })) {
@@ -260,7 +278,7 @@ export function TetrisGameComponent() {
     const baseSpeed = 1000; // 1秒
     const gameLoop = setInterval(() => {
       softDrop();
-    }, baseSpeed * Math.pow(0.8, Math.min(level - 1, 13))); // スピード増加はレベル14で停止
+    }, baseSpeed * Math.pow(0.6, Math.min(level - 1, 13))); // スピード増加はレベル14で停止
 
     return () => clearInterval(gameLoop);
   }, [softDrop, level, gameOver, isPaused, checkCollision]); // checkCollisionを依存配列に追加

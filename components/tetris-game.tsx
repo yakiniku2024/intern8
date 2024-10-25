@@ -381,12 +381,12 @@ export function TetrisGameComponent() {
   }, [grid, currentPiece, currentPosition, nextPieces, heldPiece, drawGrid]);
 
   const drawPiece = (ctx: CanvasRenderingContext2D, piece: Piece, position: { x: number, y: number }, isGhost: boolean = false) => {
-    ctx.fillStyle = isGhost ? 'rgba(169, 169, 169, 0.5)' : piece.color; // ゴーストの色を薄い灰色に設定
+    ctx.fillStyle = isGhost ? 'rgba(0, 0, 0, 0.5)' : piece.color; // ゴーストの色を設定
     piece.shape.forEach((row, y) => {
       row.forEach((cell, x) => {
         if (cell) {
           ctx.fillRect((position.x + x) * CELL_SIZE, (position.y + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-          ctx.strokeStyle = isGhost ? piece.color : 'rgba(0, 0, 0, 0.3)'; // ゴーストの枠線をミノの色に設定
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
           ctx.strokeRect((position.x + x) * CELL_SIZE, (position.y + y) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
         }
       });
